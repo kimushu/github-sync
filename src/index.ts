@@ -58,11 +58,11 @@ function sync(config: {source: any, auth: any, ssh_url?: string}): Promise<void>
                     if (fs.existsSync(repo_dir)) {
                         // Already cloned
                         console.log(`* Updating a repository: ${full_name}`);
-                        return git(`fetch`, repo_dir);
+                        return git(`fetch --all`, repo_dir);
                     } else {
                         // Newly clone
                         console.log(`* Cloning a new repository: ${full_name}`);
-                        return git(`clone --bare "${ssh_url}"`, base_dir);
+                        return git(`clone --mirror "${ssh_url}"`, base_dir);
                     }
                 });
             },
