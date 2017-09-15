@@ -19,8 +19,12 @@ function git(params: string, cwd: string): Promise<string> {
     });
 }
 
-function sync(config: {source: any, auth: any, ssh_url?: string}): Promise<void> {
+function sync(config: {source: any, auth: any, ssh_url?: string, excludes?: string[]}): Promise<void> {
     let gh = new GithubApi(Object.assign({}, config.source));
+    let {excludes} = config;
+    if (excludes == null) {
+        excludes = [];
+    }
 
     gh.authenticate(config.auth);
     return gh.repos.getAll({})
@@ -29,6 +33,10 @@ function sync(config: {source: any, auth: any, ssh_url?: string}): Promise<void>
         return list.reduce(
             (promise, repo) => {
                 let { name, full_name, owner, clone_url, ssh_url } = repo;
+                if (excludes.indexOf(full_name) >= 0) {
+                    // Skip this repository
+                    return promise;
+                }
                 if (ssh_url == null) {
                     if (config.ssh_url == null) {
                         return Promise.reject(new Error(`No SSH URL for ${full_name}`));
