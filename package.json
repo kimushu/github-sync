@@ -1,0 +1,30 @@
+{
+  "name": "github-sync",
+  "version": "1.0.0",
+  "description": "GitHub(/GitBucket) synchronizer",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kimushu/github-sync.git"
+  },
+  "author": "kimu_shu",
+  "license": "MIT",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/kimushu/github-sync/issues"
+  },
+  "homepage": "https://github.com/kimushu/github-sync#readme",
+  "devDependencies": {
+    "@types/fs-extra": "^4.0.2",
+    "@types/github": "^7.1.0",
+    "@types/node": "^8.0.26",
+    "typescript": "^2.5.2"
+  },
+  "dependencies": {
+    "fs-extra": "^4.0.2",
+    "github": "^11.0.0"
+  }
+}
