@@ -27,9 +27,20 @@ function sync(config: {source: any, auth: any, ssh_url?: string, excludes?: stri
     }
 
     gh.authenticate(config.auth);
-    return gh.repos.getAll({})
-    .then((result) => {
-        let list = result.data;
+    let list = [];
+    let getPage = (page: number): Promise<void> => {
+        return gh.repos.getAll({page})
+        .then((result: {data: any[], meta: any}) => {
+            if (result.data.length > 0) {
+                list.push(...result.data);
+                if (result.meta.link != null) {
+                    return getPage(page + 1);
+                }
+            }
+        });
+    };
+    return getPage(1)
+    .then(() => {
         return list.reduce(
             (promise, repo) => {
                 let { name, full_name, owner, clone_url, ssh_url } = repo;
