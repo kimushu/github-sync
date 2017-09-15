@@ -34,15 +34,17 @@ function sync(config: {source: any, auth: any, ssh_url?: string}): Promise<void>
                         return Promise.reject(new Error(`No SSH URL for ${full_name}`));
                     }
                     ssh_url = config.ssh_url.replace(
-                        /:(owner|repo)/g,
+                        /\{(host|owner|repo)\}/g,
                         (match, key) => {
                             switch (key) {
+                                case "host":
+                                    return config.source.host;
                                 case "owner":
                                     return owner.login;
                                 case "repo":
                                     return name;
                             }
-                            return `:${key}`;
+                            return `{${key}}`;
                         }
                     );
                 }
