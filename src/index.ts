@@ -29,11 +29,11 @@ function sync(config: {source: any, auth: any, ssh_url?: string, excludes?: stri
     gh.authenticate(config.auth);
     let list = [];
     let getPage = (page: number): Promise<void> => {
-        return (<Promise<any>>gh.repos.getAll({page}))
-        .then((result: {data: any[], meta: any}) => {
+        return gh.repos.getAll({page})
+        .then((result) => {
             if (result.data.length > 0) {
                 list.push(...result.data);
-                if (result.meta.link != null) {
+                if (result.headers.link != null) {
                     return getPage(page + 1);
                 }
             }
