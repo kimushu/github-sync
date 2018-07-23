@@ -2,6 +2,7 @@ import * as fs from "fs-extra";
 import * as path from "path";
 import * as GithubApi from "@octokit/rest";
 import { exec } from "child_process";
+import { ENGINE_METHOD_ALL } from "constants";
 
 const CONFIG_JSON = path.join(__dirname, "..", "config.json");
 const REPOS_DIR = path.join(__dirname, "..", "repos");
@@ -67,9 +68,9 @@ function sync(config: {source: any, auth: any, ssh_url?: string, excludes?: stri
                         }
                     );
                 }
-                if (!ssh_url.startsWith("ssh://")) {
-                    ssh_url = `ssh://${ssh_url}`;
-                }
+                ssh_url = ssh_url.replace(/^(git@.*):([^:\/]+)\//, (all, server, owner) => {
+                    return `ssh://${server}/${owner}/`;
+                });
                 let base_dir = path.join(REPOS_DIR, owner.login);
                 let repo_dir = path.join(base_dir, `${name}.git`);
                 return promise
