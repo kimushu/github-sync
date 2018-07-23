@@ -67,6 +67,9 @@ function sync(config: {source: any, auth: any, ssh_url?: string, excludes?: stri
                         }
                     );
                 }
+                if (!ssh_url.startsWith("ssh://")) {
+                    ssh_url = `ssh://${ssh_url}`;
+                }
                 let base_dir = path.join(REPOS_DIR, owner.login);
                 let repo_dir = path.join(base_dir, `${name}.git`);
                 return promise
