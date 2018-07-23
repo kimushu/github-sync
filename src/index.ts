@@ -1,6 +1,6 @@
 import * as fs from "fs-extra";
 import * as path from "path";
-import * as GithubApi from "github";
+import * as GithubApi from "@octokit/rest";
 import { exec } from "child_process";
 
 const CONFIG_JSON = path.join(__dirname, "..", "config.json");
@@ -29,7 +29,7 @@ function sync(config: {source: any, auth: any, ssh_url?: string, excludes?: stri
     gh.authenticate(config.auth);
     let list = [];
     let getPage = (page: number): Promise<void> => {
-        return gh.repos.getAll({page})
+        return (<Promise<any>>gh.repos.getAll({page}))
         .then((result: {data: any[], meta: any}) => {
             if (result.data.length > 0) {
                 list.push(...result.data);

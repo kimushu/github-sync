@@ -19,12 +19,11 @@
   "homepage": "https://github.com/kimushu/github-sync#readme",
   "devDependencies": {
     "@types/fs-extra": "^4.0.2",
-    "@types/github": "^7.1.0",
     "@types/node": "^8.0.26",
     "typescript": "^2.5.2"
   },
   "dependencies": {
-    "fs-extra": "^4.0.2",
-    "github": "^11.0.0"
+    "@octokit/rest": "^15.9.4",
+    "fs-extra": "^4.0.2"
   }
 }
