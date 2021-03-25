@@ -20,78 +20,63 @@ function git(params: string, cwd: string): Promise<string> {
     });
 }
 
-function sync(config: {source: any, auth: any, ssh_url?: string, excludes?: string[]}): Promise<void> {
-    let gh = new GithubApi(Object.assign({}, config.source));
-    let {excludes} = config;
+async function sync(config: {source: any, auth: any, ssh_url?: string, excludes?: string[]}): Promise<void> {
+    const gh = new GithubApi(Object.assign({}, config.source));
+    let { excludes } = config;
     if (excludes == null) {
         excludes = [];
     }
 
     gh.authenticate(config.auth);
-    let list = [];
-    let getPage = (page: number): Promise<void> => {
-        return gh.repos.getAll({page})
-        .then((result) => {
-            if (result.data.length > 0) {
-                list.push(...result.data);
-                if (result.headers.link != null) {
-                    return getPage(page + 1);
-                }
+    const repos: GithubApi.ReposListPublicResponseItem[] = [];
+    for (let page = 0;; ++page) {
+        const result = await gh.repos.list({ page });
+        repos.push(...result.data);
+        if (result.headers.link == null) {
+            break;
+        }
+    }
+    for (const repo of repos) {
+        let { name, full_name, owner, ssh_url } = repo;
+        if (excludes.indexOf(full_name) >= 0) {
+            // Skip this repository
+            continue;
+        }
+        if (ssh_url == null) {
+            if (config.ssh_url == null) {
+                throw new Error(`No SSH URL for ${full_name}`);
             }
+            ssh_url = config.ssh_url.replace(
+                /\{(host|owner|repo)\}/g,
+                (_match, key) => {
+                    switch (key) {
+                        case "host":
+                            return config.source.host;
+                        case "owner":
+                            return owner.login;
+                        case "repo":
+                            return name;
+                    }
+                    return `{${key}}`;
+                }
+            );
+        }
+        ssh_url = ssh_url.replace(/^(git@.*):([^:\/]+)\//, (_all, server, owner) => {
+            return `ssh://${server}/${owner}/`;
         });
-    };
-    return getPage(1)
-    .then(() => {
-        return list.reduce(
-            (promise, repo) => {
-                let { name, full_name, owner, clone_url, ssh_url } = repo;
-                if (excludes.indexOf(full_name) >= 0) {
-                    // Skip this repository
-                    return promise;
-                }
-                if (ssh_url == null) {
-                    if (config.ssh_url == null) {
-                        return Promise.reject(new Error(`No SSH URL for ${full_name}`));
-                    }
-                    ssh_url = config.ssh_url.replace(
-                        /\{(host|owner|repo)\}/g,
-                        (match, key) => {
-                            switch (key) {
-                                case "host":
-                                    return config.source.host;
-                                case "owner":
-                                    return owner.login;
-                                case "repo":
-                                    return name;
-                            }
-                            return `{${key}}`;
-                        }
-                    );
-                }
-                ssh_url = ssh_url.replace(/^(git@.*):([^:\/]+)\//, (all, server, owner) => {
-                    return `ssh://${server}/${owner}/`;
-                });
-                let base_dir = path.join(REPOS_DIR, owner.login);
-                let repo_dir = path.join(base_dir, `${name}.git`);
-                return promise
-                .then((result) => {
-                    return fs.ensureDir(base_dir);
-                })
-                .then(() => {
-                    if (fs.existsSync(repo_dir)) {
-                        // Already cloned
-                        console.log(`* Updating a repository: ${full_name}`);
-                        return git(`fetch --all`, repo_dir);
-                    } else {
-                        // Newly clone
-                        console.log(`* Cloning a new repository: ${full_name}`);
-                        return git(`clone --mirror "${ssh_url}"`, base_dir);
-                    }
-                });
-            },
-            Promise.resolve()
-        );
-    });
+        let base_dir = path.join(REPOS_DIR, owner.login);
+        let repo_dir = path.join(base_dir, `${name}.git`);
+        await fs.ensureDir(base_dir);
+        if (fs.existsSync(repo_dir)) {
+            // Already cloned
+            console.log(`* Updating a repository: ${full_name}`);
+            await git(`fetch --all`, repo_dir);
+        } else {
+            // Newly clone
+            console.log(`* Cloning a new repository: ${full_name}`);
+            await git(`clone --mirror "${ssh_url}"`, base_dir);
+        }
+    }
 }
 
 sync(JSON.parse(fs.readFileSync(CONFIG_JSON, "utf8")))
