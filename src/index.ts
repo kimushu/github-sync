@@ -30,7 +30,7 @@ async function sync(config: {source: any, auth: any, ssh_url?: string, excludes?
     gh.authenticate(config.auth);
     const repos: GithubApi.ReposListPublicResponseItem[] = [];
     for (let page = 0;; ++page) {
-        const result = await gh.repos.list({ page });
+        const result = await (gh.repos as any).getAll({ page });
         repos.push(...result.data);
         if (result.headers.link == null) {
             break;
