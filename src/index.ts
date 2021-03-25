@@ -70,6 +70,7 @@ async function sync(config: {source: any, auth: any, ssh_url?: string, excludes?
         if (fs.existsSync(repo_dir)) {
             // Already cloned
             console.log(`* Updating a repository: ${full_name}`);
+            await git(`remote set-url origin "${ssh_url}"`, repo_dir);
             await git(`fetch --all`, repo_dir);
         } else {
             // Newly clone
