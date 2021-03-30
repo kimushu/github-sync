@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@octokit/rest": "^15.9.4",
+    "before-after-hook": "^1.1.0",
     "fs-extra": "^4.0.2"
   }
 }
